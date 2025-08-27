@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shop Inventory Management</title>
+    <style>
+      :root {
+        --green: #4caf50;
+        --green-dark: #3e8e41;
+        --bg: #f5f5f5;
+        --panel: #ffffff;
+        --muted: #f2f2f2;
+        --text: #222222;
+        --error: #d32f2f;
+        --success: #2e7d32;
+        --border: #dddddd;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        background-color: var(--bg);
+        color: var(--text);
+        line-height: 1.4;
+      }
+
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 16px;
+      }
+
+      header {
+        background-color: var(--panel);
+        border: 1px solid var(--border);
+        border-left: 4px solid var(--green);
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: 1.6rem;
+        color: var(--green);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+
+      .card {
+        background-color: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 16px;
+      }
+
+      .card h2 {
+        margin: 0 0 12px 0;
+        font-size: 1.2rem;
+        color: var(--green);
+      }
+
+      form .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 160px;
+        gap: 12px;
+        align-items: end;
+      }
+
+      label {
+        display: block;
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+      }
+
+      input[type="text"],
+      input[type="number"] {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: #fafafa;
+      }
+
+      button {
+        cursor: pointer;
+        border: none;
+        background-color: var(--green);
+        color: #ffffff;
+        padding: 12px 14px;
+        border-radius: 4px;
+        font-weight: bold;
+        transition: background-color 0.15s ease-in-out, opacity 0.15s ease-in-out;
+      }
+
+      button:hover { background-color: var(--green-dark); }
+      button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+      .reports {
+        margin-top: 16px;
+      }
+
+      .btn-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .output, .messages {
+        margin-top: 16px;
+      }
+
+      .message {
+        padding: 12px 14px;
+        border-radius: 4px;
+        border: 1px solid transparent;
+        font-size: 0.95rem;
+      }
+
+      .message.success {
+        background: #e8f5e9;
+        color: var(--success);
+        border-color: #c8e6c9;
+      }
+
+      .message.error {
+        background: #ffebee;
+        color: var(--error);
+        border-color: #ffcdd2;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #ffffff;
+        border: 1px solid var(--border);
+      }
+
+      thead {
+        background-color: var(--green);
+        color: #ffffff;
+      }
+
+      th, td {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+        white-space: nowrap;
+      }
+
+      tbody tr:nth-child(even) { background-color: var(--muted); }
+      tbody tr:hover { background-color: #eaeaea; }
+
+      .table-wrap { overflow-x: auto; }
+
+      @media (max-width: 600px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+        form .row {
+          grid-template-columns: 1fr;
+        }
+        .btn-row { flex-direction: column; }
+        button { width: 100%; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Shop Inventory Management</h1>
+      </header>
+
+      <section class="grid">
+        <div class="card">
+          <h2>Buy Item</h2>
+          <form id="buy-form">
+            <div class="row">
+              <div>
+                <label for="buy-name">Item Name</label>
+                <input id="buy-name" type="text" placeholder="e.g., sugar" required />
+              </div>
+              <div>
+                <label for="buy-qty">Quantity (kg)</label>
+                <input id="buy-qty" type="number" step="0.01" min="0.01" placeholder="e.g., 10" required />
+              </div>
+              <div>
+                <label for="buy-price">Cost Price (/kg)</label>
+                <input id="buy-price" type="number" step="0.01" min="0.01" placeholder="e.g., 50" required />
+              </div>
+              <div>
+                <button type="submit">Add to Inventory</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2>Sell Item</h2>
+          <form id="sell-form">
+            <div class="row">
+              <div>
+                <label for="sell-name">Item Name</label>
+                <input id="sell-name" type="text" placeholder="e.g., sugar" required />
+              </div>
+              <div>
+                <label for="sell-qty">Quantity Sold (kg)</label>
+                <input id="sell-qty" type="number" step="0.01" min="0.01" placeholder="e.g., 2" required />
+              </div>
+              <div>
+                <label for="sell-price">Selling Price (/kg)</label>
+                <input id="sell-price" type="number" step="0.01" min="0.01" placeholder="e.g., 60" required />
+              </div>
+              <div>
+                <button type="submit">Sell Item</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section class="card reports">
+        <h2>Reports</h2>
+        <div class="btn-row">
+          <button id="btn-stock" type="button">Show Stock</button>
+          <button id="btn-profit" type="button">Show Total Profit</button>
+          <button id="btn-sales" type="button">Show Sales History</button>
+        </div>
+        <div class="messages" id="messages"></div>
+        <div class="output" id="output"></div>
+      </section>
+    </div>
+
+    <script>
+      // Data storage keys
+      const STORAGE_KEYS = {
+        inventory: 'inventory',
+        sales: 'sales'
+      };
+
+      // In-memory state
+      let inventory = [];
+      let sales = [];
+
+      // Utilities
+      const toTwo = (num) => Number(num).toFixed(2);
+      const normalizeName = (name) => String(name).trim().toLowerCase();
+
+      const loadData = () => {
+        try {
+          const inv = JSON.parse(localStorage.getItem(STORAGE_KEYS.inventory) || '[]');
+          const sal = JSON.parse(localStorage.getItem(STORAGE_KEYS.sales) || '[]');
+          if (Array.isArray(inv)) inventory = inv; else inventory = [];
+          if (Array.isArray(sal)) sales = sal; else sales = [];
+        } catch (e) {
+          inventory = [];
+          sales = [];
+        }
+      };
+
+      const saveData = () => {
+        localStorage.setItem(STORAGE_KEYS.inventory, JSON.stringify(inventory));
+        localStorage.setItem(STORAGE_KEYS.sales, JSON.stringify(sales));
+      };
+
+      // Messaging
+      const messagesEl = document.getElementById('messages');
+      const outputEl = document.getElementById('output');
+
+      const showMessage = (text, type) => {
+        const div = document.createElement('div');
+        div.className = `message ${type}`;
+        div.textContent = text;
+        messagesEl.innerHTML = '';
+        messagesEl.appendChild(div);
+        // Auto-clear after a while
+        window.clearTimeout(showMessage._t);
+        showMessage._t = window.setTimeout(() => {
+          messagesEl.innerHTML = '';
+        }, 4000);
+      };
+
+      const clearOutput = () => { outputEl.innerHTML = ''; };
+
+      // Buy logic
+      const onBuy = (event) => {
+        event.preventDefault();
+        const nameInput = document.getElementById('buy-name');
+        const qtyInput = document.getElementById('buy-qty');
+        const priceInput = document.getElementById('buy-price');
+
+        const name = normalizeName(nameInput.value);
+        const quantity = parseFloat(qtyInput.value);
+        const costPrice = parseFloat(priceInput.value);
+
+        if (!name) {
+          showMessage('Item name is required.', 'error');
+          return;
+        }
+        if (!Number.isFinite(quantity) || quantity <= 0) {
+          showMessage('Quantity must be a positive number.', 'error');
+          return;
+        }
+        if (!Number.isFinite(costPrice) || costPrice <= 0) {
+          showMessage('Cost price must be a positive number.', 'error');
+          return;
+        }
+
+        const existing = inventory.find((it) => it.name === name);
+        const addedCost = quantity * costPrice;
+
+        if (existing) {
+          const newQuantity = existing.quantity + quantity;
+          const newTotalCost = existing.totalCost + addedCost;
+          const newCostPrice = newTotalCost / newQuantity;
+          existing.quantity = newQuantity;
+          existing.totalCost = newTotalCost;
+          existing.costPrice = newCostPrice;
+        } else {
+          inventory.push({
+            name,
+            quantity,
+            costPrice,
+            totalCost: addedCost
+          });
+        }
+
+        // Remove zero-quantity items (safety), using filter as per spec
+        inventory = inventory.filter((it) => it.quantity > 0);
+
+        saveData();
+        showMessage(`${toTwo(quantity)} kg of ${name} added to inventory at ${toTwo(costPrice)}/kg.`, 'success');
+        event.target.reset();
+      };
+
+      // Sell logic
+      const onSell = (event) => {
+        event.preventDefault();
+        const nameInput = document.getElementById('sell-name');
+        const qtyInput = document.getElementById('sell-qty');
+        const priceInput = document.getElementById('sell-price');
+
+        const name = normalizeName(nameInput.value);
+        const quantitySold = parseFloat(qtyInput.value);
+        const sellingPrice = parseFloat(priceInput.value);
+
+        if (!name) {
+          showMessage('Item name is required.', 'error');
+          return;
+        }
+        if (!Number.isFinite(quantitySold) || quantitySold <= 0) {
+          showMessage('Quantity sold must be a positive number.', 'error');
+          return;
+        }
+        if (!Number.isFinite(sellingPrice) || sellingPrice <= 0) {
+          showMessage('Selling price must be a positive number.', 'error');
+          return;
+        }
+
+        const item = inventory.find((it) => it.name === name);
+        if (!item) {
+          showMessage(`Item not found: ${name}.`, 'error');
+          return;
+        }
+        if (item.quantity < quantitySold) {
+          showMessage(`Insufficient stock for ${name}. Available: ${toTwo(item.quantity)} kg.`, 'error');
+          return;
+        }
+
+        const profit = quantitySold * (sellingPrice - item.costPrice);
+
+        // Update inventory totals
+        item.quantity -= quantitySold;
+        item.totalCost -= quantitySold * item.costPrice;
+        if (item.quantity <= 0.0000001) { // treat near-zero as zero
+          // remove item entirely
+          inventory = inventory.filter((it) => it.name !== name);
+        }
+
+        // Record sale
+        sales.push({
+          name,
+          quantitySold,
+          sellingPrice,
+          profit,
+          timestamp: Date.now()
+        });
+
+        saveData();
+        showMessage(`${toTwo(quantitySold)} kg of ${name} sold at ${toTwo(sellingPrice)}/kg. Profit: ${toTwo(profit)}.`, 'success');
+        event.target.reset();
+      };
+
+      // Report renderers
+      const renderStockReport = () => {
+        const items = inventory.filter((it) => it.quantity > 0);
+        if (items.length === 0) {
+          outputEl.innerHTML = '<div class="message">No items in stock.</div>';
+          return;
+        }
+
+        const rows = items
+          .map((it) => `
+            <tr>
+              <td>${it.name}</td>
+              <td>${toTwo(it.quantity)}</td>
+              <td>${toTwo(it.costPrice)}</td>
+            </tr>
+          `)
+          .join('');
+
+        outputEl.innerHTML = `
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Item Name</th>
+                  <th>Quantity (kg)</th>
+                  <th>Cost Price (/kg)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rows}
+              </tbody>
+            </table>
+          </div>
+        `;
+      };
+
+      const renderTotalProfitReport = () => {
+        const total = sales.reduce((sum, s) => sum + Number(s.profit || 0), 0);
+        outputEl.innerHTML = `
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Total Profit</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>${toTwo(total)}</td></tr>
+              </tbody>
+            </table>
+          </div>
+        `;
+      };
+
+      const renderSalesHistoryReport = () => {
+        if (sales.length === 0) {
+          outputEl.innerHTML = '<div class="message">No sales recorded.</div>';
+          return;
+        }
+
+        const rows = sales
+          .map((s) => {
+            const dateStr = new Date(s.timestamp).toLocaleString();
+            return `
+              <tr>
+                <td>${dateStr}</td>
+                <td>${s.name}</td>
+                <td>${toTwo(s.quantitySold)}</td>
+                <td>${toTwo(s.sellingPrice)}</td>
+                <td>${toTwo(s.profit)}</td>
+              </tr>
+            `;
+          })
+          .join('');
+
+        outputEl.innerHTML = `
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Item Name</th>
+                  <th>Quantity Sold (kg)</th>
+                  <th>Selling Price (/kg)</th>
+                  <th>Profit</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rows}
+              </tbody>
+            </table>
+          </div>
+        `;
+      };
+
+      // Wiring
+      document.getElementById('buy-form').addEventListener('submit', onBuy);
+      document.getElementById('sell-form').addEventListener('submit', onSell);
+      document.getElementById('btn-stock').addEventListener('click', () => { clearOutput(); renderStockReport(); });
+      document.getElementById('btn-profit').addEventListener('click', () => { clearOutput(); renderTotalProfitReport(); });
+      document.getElementById('btn-sales').addEventListener('click', () => { clearOutput(); renderSalesHistoryReport(); });
+
+      // Init
+      loadData();
+      // Optional: show stock by default for quick view
+      renderStockReport();
+    </script>
+  </body>
+  </html>
+
